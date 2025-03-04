@@ -92,3 +92,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* globals.css */
+ul {
+  @apply list-disc list-inside space-y-2; /* Tailwind CSS utility classes */
+}

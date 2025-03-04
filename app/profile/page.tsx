@@ -1,57 +1,39 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { z } from "zod"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Eye, EyeOff } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
+import { supabase } from "@/lib/supabaseClient"
 
-// Form validation schemas
-const profileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-})
-
-const passwordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "New password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  })
-
-export default function ProfilePage() {
+const ProfilePage = () => {
   const router = useRouter()
-  const { user, updateProfile, changePassword, loading } = useAuth()
+  const { user, getUser, loading } = useAuth()
 
   const [profileData, setProfileData] = useState({
-    name: "",
+    id: "",
+    email: "",
+    avatar_url: null,
+    website: null,
+    first_name: "",
+    last_name: "",
+    name: null,
   })
 
+  const [isEditing, setIsEditing] = useState(false)
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   })
-
-  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({})
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({})
-  const [isProfileLoading, setIsProfileLoading] = useState(false)
-  const [isPasswordLoading, setIsPasswordLoading] = useState(false)
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // Redirect if not logged in
   if (!user && !loading) {
@@ -59,97 +41,25 @@ export default function ProfilePage() {
     return null
   }
 
-  // Update profileData with user data if available
-  useState(() => {
-    setProfileData({ name: user?.name || "" })
+  // Fetch user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user) {
+        const userData = await getUser(user.id)
+        console.log("Fetched User Data:", userData)
+        setProfileData({
+          id: userData.id,
+          email: userData.email,
+          avatar_url: userData.profile.avatar_url || null,
+          website: userData.profile.website || null,
+          first_name: userData.profile.first_name || "",
+          last_name: userData.profile.last_name || "",
+          name: userData.profile.name || null,
+        })
+      }
+    }
+    fetchUserData()
   }, [user])
-
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setProfileData((prev) => ({ ...prev, [name]: value }))
-    // Clear error when user types
-    if (profileErrors[name]) {
-      setProfileErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
-      })
-    }
-  }
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setPasswordData((prev) => ({ ...prev, [name]: value }))
-    // Clear error when user types
-    if (passwordErrors[name]) {
-      setPasswordErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
-      })
-    }
-  }
-
-  const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsProfileLoading(true)
-
-    try {
-      // Validate form data
-      const validatedData = profileSchema.parse(profileData)
-
-      // Update profile
-      await updateProfile({ name: validatedData.name })
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Handle validation errors
-        const newErrors: Record<string, string> = {}
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            newErrors[err.path[0].toString()] = err.message
-          }
-        })
-        setProfileErrors(newErrors)
-      }
-      // API errors are handled by the auth context
-    } finally {
-      setIsProfileLoading(false)
-    }
-  }
-
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsPasswordLoading(true)
-
-    try {
-      // Validate form data
-      const validatedData = passwordSchema.parse(passwordData)
-
-      // Change password
-      await changePassword(validatedData.currentPassword, validatedData.newPassword)
-
-      // Reset form
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      })
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Handle validation errors
-        const newErrors: Record<string, string> = {}
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            newErrors[err.path[0].toString()] = err.message
-          }
-        })
-        setPasswordErrors(newErrors)
-      }
-      // API errors are handled by the auth context
-    } finally {
-      setIsPasswordLoading(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -163,160 +73,210 @@ export default function ProfilePage() {
     )
   }
 
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setProfileData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    // Call your API to update the profile
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          avatar_url: profileData.avatar_url,
+          website: profileData.website,
+          first_name: profileData.first_name,
+          last_name: profileData.last_name,
+        })
+        .eq("id", profileData.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "Your profile has been updated successfully.",
+      })
+      setIsEditing(false) // Exit edit mode
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      toast({
+        variant: "destructive",
+        title: "Profile update failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+      })
+    }
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setPasswordData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate the new password
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      console.error("Passwords do not match");
+      return; // You can also show a toast or alert here
+    }
+
+    // Call your API to update the password
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword,
+      });
+
+      if (error) throw error;
+
+      console.log("Password successfully updated");
+      // Provide feedback to the user
+      toast({
+        title: "Success",
+        description: "Your password has been updated successfully.",
+      });
+
+      // Optionally, reset the password data
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      console.error("Error updating password:", error);
+      toast({
+        variant: "destructive",
+        title: "Password update failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+      });
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 container max-w-4xl py-8">
-        <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
-
+      <main className="flex-1 container max-w-4xl py-8 mx-auto">
+        <h1 className="text-3xl font-bold mb-6 text-center">Account Settings</h1>
+        
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="password">Password</TabsTrigger>
+            <TabsTrigger value="profile">Profile Information</TabsTrigger>
+            <TabsTrigger value="password">Reset Password</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
             <Card>
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update your account profile information</CardDescription>
               </CardHeader>
-              <form onSubmit={handleProfileSubmit}>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={profileData.name}
-                      onChange={handleProfileChange}
-                      disabled={isProfileLoading}
-                    />
-                    {profileErrors.name && <p className="text-sm text-destructive">{profileErrors.name}</p>}
-                  </div>
-
+              <CardContent>
+                <form onSubmit={handleProfileUpdate}>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" value={user?.email || ""} disabled />
-                    <p className="text-sm text-muted-foreground">Your email cannot be changed</p>
+                    <Input
+                      id="email"
+                      value={profileData.email}
+                      disabled
+                    />
                   </div>
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" disabled={isProfileLoading}>
-                    {isProfileLoading ? "Saving..." : "Save changes"}
-                  </Button>
-                </CardFooter>
-              </form>
+                  <div className="space-y-2">
+                    <Label htmlFor="avatarUrl">Avatar URL</Label>
+                    <Input
+                      id="avatarUrl"
+                      name="avatar_url"
+                      value={profileData.avatar_url || ""}
+                      onChange={handleProfileChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      name="website"
+                      value={profileData.website || ""}
+                      onChange={handleProfileChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      name="first_name"
+                      value={profileData.first_name}
+                      onChange={handleProfileChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      name="last_name"
+                      value={profileData.last_name}
+                      onChange={handleProfileChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  
+                  {/* Row for Edit and Save buttons */}
+                  <div className="flex justify-between mt-4">
+                    <Button type="button" onClick={() => setIsEditing(!isEditing)}>
+                      {isEditing ? "Cancel" : "Edit"}
+                    </Button>
+                    {isEditing && <Button type="submit">Save Changes</Button>}
+                  </div>
+                </form>
+              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="password">
             <Card>
               <CardHeader>
-                <CardTitle>Change Password</CardTitle>
-                <CardDescription>Update your password</CardDescription>
+                <CardTitle>Reset Password</CardTitle>
               </CardHeader>
-              <form onSubmit={handlePasswordSubmit}>
-                <CardContent className="space-y-4">
+              <CardContent>
+                <form onSubmit={handlePasswordReset}>
                   <div className="space-y-2">
                     <Label htmlFor="currentPassword">Current Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="currentPassword"
-                        name="currentPassword"
-                        type={showCurrentPassword ? "text" : "password"}
-                        value={passwordData.currentPassword}
-                        onChange={handlePasswordChange}
-                        disabled={isPasswordLoading}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      >
-                        {showCurrentPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="sr-only">{showCurrentPassword ? "Hide password" : "Show password"}</span>
-                      </Button>
-                    </div>
-                    {passwordErrors.currentPassword && (
-                      <p className="text-sm text-destructive">{passwordErrors.currentPassword}</p>
-                    )}
+                    <Input
+                      id="currentPassword"
+                      name="currentPassword"
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                      required
+                    />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="newPassword">New Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="newPassword"
-                        name="newPassword"
-                        type={showNewPassword ? "text" : "password"}
-                        value={passwordData.newPassword}
-                        onChange={handlePasswordChange}
-                        disabled={isPasswordLoading}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                      >
-                        {showNewPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="sr-only">{showNewPassword ? "Hide password" : "Show password"}</span>
-                      </Button>
-                    </div>
-                    {passwordErrors.newPassword && (
-                      <p className="text-sm text-destructive">{passwordErrors.newPassword}</p>
-                    )}
+                    <Input
+                      id="newPassword"
+                      name="newPassword"
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      required
+                    />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={passwordData.confirmPassword}
-                        onChange={handlePasswordChange}
-                        disabled={isPasswordLoading}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
-                      </Button>
-                    </div>
-                    {passwordErrors.confirmPassword && (
-                      <p className="text-sm text-destructive">{passwordErrors.confirmPassword}</p>
-                    )}
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                      required
+                    />
                   </div>
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" disabled={isPasswordLoading}>
-                    {isPasswordLoading ? "Changing password..." : "Change password"}
-                  </Button>
-                </CardFooter>
-              </form>
+                  <Button type="submit">Reset Password</Button>
+                </form>
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
@@ -325,4 +285,6 @@ export default function ProfilePage() {
     </div>
   )
 }
+
+export default ProfilePage
 

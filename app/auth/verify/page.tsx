@@ -32,15 +32,6 @@ export default function VerifyPage() {
                 </p>
               </div>
             </div>
-
-            {/* For demo purposes only */}
-            <div className="rounded-md bg-muted p-4 text-sm">
-              <p className="font-medium">Demo Mode:</p>
-              <p className="mt-1">
-                In a real application, you would need to click a link in your email. For this demo, your account is
-                automatically verified.
-              </p>
-            </div>
           </CardContent>
           <CardFooter className="flex flex-col">
             <Button asChild className="w-full">

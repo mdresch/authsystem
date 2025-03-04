@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { z } from "zod"
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Eye, EyeOff } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
 
 // Form validation schema
 const registerSchema = z
@@ -42,6 +43,18 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
+  useEffect(() => {
+    // Parse the URL hash for error details
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const errorCode = params.get('error_code');
+    const errorDescription = params.get('error_description');
+
+    if (errorCode && errorCode.startsWith('4')) {
+      // Show error message if error is a 4xx error
+      window.alert(errorDescription);
+    }
+  }, [router]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -56,32 +69,42 @@ export default function RegisterPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      // Validate form data
-      const validatedData = registerSchema.parse(formData)
-
-      // Attempt registration
-      await register(validatedData.name, validatedData.email, validatedData.password)
-
-      // Redirect to verification page
-      router.push("/auth/verify")
+        const validatedData = registerSchema.parse(formData);
+        await register(validatedData.name, validatedData.email, validatedData.password);
+        toast({
+            title: "Registration successful",
+            description: "Please check your email to verify your account.",
+        });
+        router.push("/auth/verify");
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Handle validation errors
-        const newErrors: Record<string, string> = {}
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            newErrors[err.path[0].toString()] = err.message
-          }
-        })
-        setErrors(newErrors)
-      }
-      // API errors are handled by the auth context
+        console.error("Registration error:", error);
+        if (error instanceof z.ZodError) {
+            const newErrors: Record<string, string> = {};
+            error.errors.forEach((err) => {
+                if (err.path[0]) {
+                    newErrors[err.path[0].toString()] = err.message;
+                }
+            });
+            setErrors(newErrors);
+        } else if (error instanceof Error) {
+            toast({
+                variant: "destructive",
+                title: "Registration failed",
+                description: error.message || "An unknown error occurred",
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Registration failed",
+                description: "An unexpected error occurred. Please try again later.",
+            });
+        }
     } finally {
-      setIsLoading(false)
+        setIsLoading(false);
     }
   }
 
@@ -120,6 +143,7 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   disabled={isLoading}
                   required
+                  autoComplete="username"
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
@@ -134,6 +158,7 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     disabled={isLoading}
                     required
+                    autoComplete="new-password"
                   />
                   <Button
                     type="button"

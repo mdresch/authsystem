@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { z } from "zod"
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Eye, EyeOff } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
 
 // Form validation schema
 const resetPasswordSchema = z
@@ -33,53 +34,44 @@ export default function ResetPasswordPage({
 }) {
   const router = useRouter()
   const { resetPassword } = useAuth()
-  const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
-      })
+  useEffect(() => {
+    // Check for error details in the URL
+    const params = new URLSearchParams(window.location.hash.slice(1))
+    const errorCode = params.get('error_code')
+    const errorDescription = params.get('error_description')
+    const token = params.get('token')
+
+    if (errorCode && errorCode === 'otp_expired') {
+      setMessage("The password reset link has expired. Please request a new link.")
+    } else if (!token) {
+      router.push("/auth/forgot-password") // Redirect if no token
     }
-  }
+  }, [params.token, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setMessage("")
+
+    if (newPassword !== confirmPassword) {
+      setMessage("Passwords do not match.")
+      setIsLoading(false)
+      return
+    }
 
     try {
-      // Validate form data
-      const validatedData = resetPasswordSchema.parse(formData)
-
-      // Reset password
-      await resetPassword(params.token, validatedData.password)
-
-      // Redirect to login page
+      await resetPassword(params.token, newPassword)
+      setMessage("Password reset successful. You can now log in.")
       router.push("/auth/login")
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Handle validation errors
-        const newErrors: Record<string, string> = {}
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            newErrors[err.path[0].toString()] = err.message
-          }
-        })
-        setErrors(newErrors)
-      }
-      // API errors are handled by the auth context
+      setMessage("Error resetting password.")
     } finally {
       setIsLoading(false)
     }
@@ -97,15 +89,13 @@ export default function ResetPasswordPage({
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
+                <Label htmlFor="newPassword">New Password</Label>
                 <div className="relative">
                   <Input
-                    id="password"
-                    name="password"
+                    id="newPassword"
                     type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleChange}
-                    disabled={isLoading}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     required
                   />
                   <Button
@@ -123,18 +113,15 @@ export default function ResetPasswordPage({
                     <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
                   </Button>
                 </div>
-                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
-                    name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    disabled={isLoading}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                   />
                   <Button
@@ -152,13 +139,13 @@ export default function ResetPasswordPage({
                     <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
                   </Button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
               </div>
             </CardContent>
             <CardFooter className="flex flex-col">
               <Button className="w-full" type="submit" disabled={isLoading}>
-                {isLoading ? "Resetting password..." : "Reset password"}
+                {isLoading ? "Resetting..." : "Reset Password"}
               </Button>
+              {message && <p className="mt-4 text-center text-sm text-muted-foreground">{message}</p>}
               <p className="mt-4 text-center text-sm text-muted-foreground">
                 Remember your password?{" "}
                 <Link href="/auth/login" className="text-primary underline-offset-4 hover:underline">

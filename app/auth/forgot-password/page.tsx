@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import { toast } from "@/components/ui/use-toast"
 
 // Form validation schema
 const forgotPasswordSchema = z.object({
@@ -25,27 +26,37 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [resetToken, setResetToken] = useState<string | null>(null)
+  const [message, setMessage] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+    setMessage("")
 
     try {
       // Validate email
       const validatedData = forgotPasswordSchema.parse({ email })
 
       // Request password reset
-      const token = await requestPasswordReset(validatedData.email)
+      await requestPasswordReset(validatedData.email, {
+        redirectTo: "http://localhost:3001/auth/reset-password", // Change to your actual URL
+      })
 
       // In a real app, this token would be sent via email
       // For demo purposes, we'll store it to use in the UI
       setResetToken(token)
       setIsSubmitted(true)
+      setMessage("Password reset email sent. Please check your inbox.")
+      toast({
+        title: "Password reset email sent",
+        description: "Check your email for the reset link.",
+      })
     } catch (error) {
       if (error instanceof z.ZodError) {
         setError(error.errors[0].message)
       }
+      setMessage("Error sending password reset email.")
       // API errors are handled by the auth context
     } finally {
       setIsLoading(false)
@@ -109,7 +120,7 @@ export default function ForgotPasswordPage() {
                   <div className="ml-3">
                     <h3 className="text-sm font-medium text-green-800 dark:text-green-200">Reset link sent</h3>
                     <div className="mt-2 text-sm text-green-700 dark:text-green-300">
-                      <p>We've sent a password reset link to your email address.</p>
+                      <p>{message}</p>
                     </div>
                   </div>
                 </div>

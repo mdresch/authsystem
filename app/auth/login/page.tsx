@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { z } from "zod"
@@ -31,6 +30,18 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  useEffect(() => {
+    // Parse the URL hash for error details
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const errorCode = params.get('error_code');
+    const errorDescription = params.get('error_description');
+
+    if (errorCode && errorCode.startsWith('4')) {
+      // Show error message if error is a 4xx error
+      window.alert(errorDescription);
+    }
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -97,6 +108,7 @@ export default function LoginPage() {
                   onChange={handleChange}
                   disabled={isLoading}
                   required
+                  autoComplete="username"
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
@@ -119,6 +131,7 @@ export default function LoginPage() {
                     onChange={handleChange}
                     disabled={isLoading}
                     required
+                    autoComplete="current-password"
                   />
                   <Button
                     type="button"

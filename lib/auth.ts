@@ -2,6 +2,7 @@
 // In a real application, this would connect to a backend service
 
 import { z } from "zod"
+import { supabase } from './supabaseClient'; // Ensure you import your Supabase client
 
 // User schema
 export const userSchema = z.object({
@@ -28,27 +29,56 @@ const createSafeUser = (user: User): SafeUser => {
   return safeUser
 }
 
+// User registration
 export const auth = {
-  // Register a new user
   async register(name: string, email: string, password: string): Promise<SafeUser> {
     // Check if user already exists
-    const existingUser = users.find((user) => user.email === email)
+    const { data: existingUser, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw new Error("Error checking existing user");
+    }
+
     if (existingUser) {
-      throw new Error("User with this email already exists")
+      throw new Error("User with this email already exists");
     }
 
     // Create new user
-    const newUser: User = {
-      id: Math.random().toString(36).substring(2, 15),
-      name,
+    const { data, error } = await supabase.auth.signUp({
       email,
-      password, // In a real app, this would be hashed
-      createdAt: new Date(),
-      emailVerified: false,
+      password,
+    });
+
+    if (error) {
+      throw error; // Throw the error to be caught in the calling function
     }
 
-    users.push(newUser)
-    return createSafeUser(newUser)
+    // Ensure data is defined and user is not null
+    if (!data || !data.user) {
+      throw new Error("User creation failed, user is null.");
+    }
+
+    const user = {
+      id: data.user.id, // Access the user ID
+      name,
+      email,
+      password, // In a real app, this should be hashed
+      createdAt: new Date(),
+      emailVerified: false,
+    };
+
+    // Optionally, store additional user information in your database
+    const { data: insertData, error: insertError } = await supabase
+      .from('users')
+      .insert([user]); // Insert the complete user object
+
+    if (insertError) throw insertError;
+
+    return createSafeUser(user);
   },
 
   // Login user

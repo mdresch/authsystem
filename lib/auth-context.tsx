@@ -3,25 +3,27 @@
 import type React from "react"
 
 import { createContext, useContext, useState, useEffect } from "react"
-import { auth, type SafeUser } from "./auth"
+import { supabase } from "./supabaseClient"
 import { useToast } from "@/components/ui/use-toast"
 
 type AuthContextType = {
-  user: SafeUser | null
+  user: any | null
   loading: boolean
   register: (name: string, email: string, password: string) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   requestPasswordReset: (email: string) => Promise<string>
   resetPassword: (token: string, newPassword: string) => Promise<void>
-  updateProfile: (data: { name?: string }) => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  getUser: (userId: string) => Promise<any>
+  createProfile: (userId: string, fullName: string) => Promise<void>
+  updateProfile: (userId: string, data: { fullName?: string; bio?: string; avatarUrl?: string | null; website?: string; firstName?: string; lastName?: string }) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<SafeUser | null>(null)
+  const [user, setUser] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
@@ -51,7 +53,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (name: string, email: string, password: string) => {
     try {
       setLoading(true)
-      const user = await auth.register(name, email, password)
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+
+      if (error) throw error
+
+      const user = data.user
+
+      if (!user) {
+        throw new Error("User creation failed, user is null.")
+      }
+
+      // Optionally, store additional user information in your database
+      const { data: insertData, error: insertError } = await supabase
+        .from('users') // Ensure this table exists in your Supabase project
+        .insert([{ id: user.id, name }]) // Adjust according to your user structure
+
+      if (insertError) throw insertError
+
       setUser(user)
       toast({
         title: "Registration successful",
@@ -72,8 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true)
-      const user = await auth.login(email, password)
-      setUser(user)
+      const { data: { user: loggedInUser }, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) throw error
+
+      setUser(loggedInUser)
       toast({
         title: "Login successful",
         description: "Welcome back!",
@@ -98,15 +125,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const requestPasswordReset = async (email: string) => {
+  const requestPasswordReset = async (email: string): Promise<string> => {
     try {
       setLoading(true)
-      const token = await auth.requestPasswordReset(email)
+      const { error } = await supabase.auth.resetPasswordForEmail(email)
+
+      if (error) throw error
+
       toast({
         title: "Password reset email sent",
         description: "Check your email for the reset link.",
       })
-      return token
+
+      return "Password reset email sent"
     } catch (error) {
       toast({
         variant: "destructive",
@@ -122,7 +153,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = async (token: string, newPassword: string) => {
     try {
       setLoading(true)
-      await auth.resetPassword(token, newPassword)
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+
+      if (error) throw error
+
       toast({
         title: "Password reset successful",
         description: "You can now log in with your new password.",
@@ -139,26 +173,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const updateProfile = async (data: { name?: string }) => {
-    if (!user) throw new Error("Not authenticated")
+  interface UpdateProfileData {
+    fullName?: string;
+    bio?: string;
+    avatarUrl?: string | null;
+    website?: string;
+    firstName?: string;
+    lastName?: string;
+  }
 
-    try {
-      setLoading(true)
-      const updatedUser = await auth.updateProfile(user.id, data)
-      setUser(updatedUser)
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+  const updateProfile = async (userId: string, data: UpdateProfileData) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: data.fullName,
+        bio: data.bio,
+        avatar_url: data.avatarUrl || null,
+        website: data.website,
+        first_name: data.firstName,
+        last_name: data.lastName,
       })
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Profile update failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-      })
-      throw error
-    } finally {
-      setLoading(false)
+      .eq("id", userId);
+
+    if (error) {
+      throw new Error(error.message);
     }
   }
 
@@ -167,7 +205,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true)
-      await auth.changePassword(user.id, currentPassword, newPassword)
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+
+      if (error) throw error
+
       toast({
         title: "Password changed",
         description: "Your password has been changed successfully.",
@@ -184,6 +225,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const getUser = async (userId: string): Promise<any> => {
+    // Get the authenticated user
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // If you need to fetch additional profile data, do so from the profiles table
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (profileError) {
+      throw new Error(profileError.message);
+    }
+
+    return { ...user, profile: profileData }; // Return both user and profile data
+  }
+
+  const createProfile = async (userId: string, fullName: string) => {
+    const { error } = await supabase
+      .from("profiles")
+      .insert([{ id: userId, full_name: fullName }]);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -196,6 +269,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         updateProfile,
         changePassword,
+        getUser,
+        createProfile,
       }}
     >
       {children}

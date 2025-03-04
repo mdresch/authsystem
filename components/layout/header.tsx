@@ -19,8 +19,8 @@ export function Header() {
   const pathname = usePathname()
 
   return (
-    <header className="border-b">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="w-full border-b">
+      <div className="container flex h-16 items-center justify-between mx-auto">
         <div className="flex items-center gap-6">
           <Link href="/" className="text-xl font-bold">
             Auth System
