@@ -4,8 +4,8 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { z } from "zod"
+import { useRouter, useSearchParams } from "next/navigation"
+import { z, ZodError } from "zod"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,11 +27,10 @@ const resetPasswordSchema = z
     path: ["confirmPassword"],
   })
 
-export default function ResetPasswordPage({
-  params,
-}: {
-  params: { token: string }
-}) {
+// Create a type from the schema
+type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
+
+export default function ResetPasswordPage() {
   const router = useRouter()
   const { resetPassword } = useAuth()
   const [newPassword, setNewPassword] = useState("")
@@ -40,40 +39,103 @@ export default function ResetPasswordPage({
   const [message, setMessage] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const searchParams = useSearchParams()
 
   useEffect(() => {
+    // Check for the 'reset' query parameter
+    const shouldReset = searchParams.get('reset');
+    if (!shouldReset) {
+      // If no reset, redirect to login
+      router.push("/auth/login");
+      return;
+    }
+
     // Check for error details in the URL
-    const params = new URLSearchParams(window.location.hash.slice(1))
-    const errorCode = params.get('error_code')
-    const errorDescription = params.get('error_description')
-    const token = params.get('token')
+    const urlParams = new URLSearchParams(window.location.hash.slice(1));
+    const errorCode = urlParams.get('error_code');
+    const errorDescription = urlParams.get('error_description');
+    const token = urlParams.get('access_token');
 
     if (errorCode && errorCode === 'otp_expired') {
-      setMessage("The password reset link has expired. Please request a new link.")
+      setMessage("The password reset link has expired. Please request a new link.");
+      toast({
+        variant: "destructive",
+        title: "Expired Link",
+        description: "The password reset link has expired. Please request a new link.",
+      });
+      router.push("/auth/forgot-password");
+
     } else if (!token) {
-      router.push("/auth/forgot-password") // Redirect if no token
+      setMessage("Invalid or missing token. Please request a new password reset link.");
+      toast({
+        variant: "destructive",
+        title: "Invalid Token",
+        description: "Invalid or missing token. Please request a new password reset link.",
+      });
+      router.push("/auth/forgot-password");
     }
-  }, [params.token, router])
+  }, [router, searchParams]);
+
+  // Zod Validation Function
+  const validateForm = (data: ResetPasswordData) => {
+    try {
+      resetPasswordSchema.parse(data);
+      return null; // No errors
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return error.errors; // Return array of Zod errors
+      }
+      return [{ message: "An unexpected validation error occurred." }];
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setMessage("")
 
-    if (newPassword !== confirmPassword) {
-      setMessage("Passwords do not match.")
-      setIsLoading(false)
-      return
+    // Use Zod for validation
+    const formData = { password: newPassword, confirmPassword: confirmPassword };
+    const errors = validateForm(formData);
+
+    if (errors) {
+      // Display Zod validation errors
+      const errorMessages = errors.map((err) => err.message).join("; ");
+      setMessage(errorMessages);
+      setIsLoading(false);
+      return;
     }
 
     try {
-      await resetPassword(params.token, newPassword)
-      setMessage("Password reset successful. You can now log in.")
-      router.push("/auth/login")
-    } catch (error) {
-      setMessage("Error resetting password.")
+      // Get token from URL
+      const urlParams = new URLSearchParams(window.location.hash.slice(1));
+      const token = urlParams.get('access_token');
+
+      if (!token) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Token is missing",
+        });
+        return;
+      }
+
+      await resetPassword(token, newPassword);
+      toast({
+        title: "Success",
+        description: "Password reset successfully! You can now log in.",
+      });
+      router.push("/auth/login");
+
+    } catch (error: any) { // Type the error
+      setMessage(error.message || "Error resetting password.");
+      toast({
+        variant: "destructive",
+        title: "Password reset failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+      })
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 

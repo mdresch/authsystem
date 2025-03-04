@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { z } from "zod"
+import { z, ZodError } from "zod"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,83 +29,80 @@ const registerSchema = z
     path: ["confirmPassword"],
   })
 
+// Create a type from the schema
+type RegisterData = z.infer<typeof registerSchema>
+
 export default function RegisterPage() {
   const router = useRouter()
-  const { register } = useAuth()
-  const [formData, setFormData] = useState({
+  const { register, isLoading, user } = useAuth()
+  const [formData, setFormData] = useState<RegisterData>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<Partial<RegisterData>>({})
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   useEffect(() => {
     // Parse the URL hash for error details
-    const params = new URLSearchParams(window.location.hash.slice(1));
-    const errorCode = params.get('error_code');
-    const errorDescription = params.get('error_description');
+    const params = new URLSearchParams(window.location.hash.slice(1))
+    const errorCode = params.get('error_code')
+    const errorDescription = params.get('error_description')
 
     if (errorCode && errorCode.startsWith('4')) {
-      // Show error message if error is a 4xx error
-      window.alert(errorDescription);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorDescription || 'An error occurred',
+      })
     }
-  }, [router]);
+  }, [router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
-      })
-    }
+    setErrors(prev => ({ ...prev, [name]: undefined })) // Clear error
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    e.preventDefault()
+    setErrors({}) // Clear previous errors
 
     try {
-        const validatedData = registerSchema.parse(formData);
-        await register(validatedData.name, validatedData.email, validatedData.password);
+      registerSchema.parse(formData) // Validate with Zod
+      await register(formData.name, formData.email, formData.password)
+      toast({
+        title: "Registration successful",
+        description: "Please check your email to verify your account.",
+      })
+      router.push("/auth/verify") // Consider redirecting to login instead
+    } catch (error: any) { // Use 'any' for error type
+      if (error instanceof ZodError) {
+        const newErrors: Partial<RegisterData> = {}
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as keyof RegisterData] = err.message // Cast to keyof
+          }
+        })
+        setErrors(newErrors)
+      } else {
         toast({
-            title: "Registration successful",
-            description: "Please check your email to verify your account.",
-        });
-        router.push("/auth/verify");
-    } catch (error) {
-        console.error("Registration error:", error);
-        if (error instanceof z.ZodError) {
-            const newErrors: Record<string, string> = {};
-            error.errors.forEach((err) => {
-                if (err.path[0]) {
-                    newErrors[err.path[0].toString()] = err.message;
-                }
-            });
-            setErrors(newErrors);
-        } else if (error instanceof Error) {
-            toast({
-                variant: "destructive",
-                title: "Registration failed",
-                description: error.message || "An unknown error occurred",
-            });
-        } else {
-            toast({
-                variant: "destructive",
-                title: "Registration failed",
-                description: "An unexpected error occurred. Please try again later.",
-            });
-        }
-    } finally {
-        setIsLoading(false);
+          variant: "destructive",
+          title: "Registration failed",
+          description: error.message || "An unknown error occurred",
+        })
+      }
     }
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+  if (user) {
+    router.replace("/")
+    return <div>Redirecting...</div>
   }
 
   return (

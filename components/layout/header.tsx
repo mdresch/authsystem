@@ -15,7 +15,7 @@ import {
 import { User, LogOut, Settings, MessageSquare } from "lucide-react"
 
 export function Header() {
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
   const pathname = usePathname()
 
   return (
@@ -60,7 +60,7 @@ export function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <User className="h-4 w-4" />
-                  {user.name}
+                  {user.email}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -77,7 +77,10 @@ export function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="cursor-pointer flex items-center gap-2">
+                <DropdownMenuItem
+                  onClick={async () => await signOut()}
+                  className="cursor-pointer flex items-center gap-2"
+                >
                   <LogOut className="h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>

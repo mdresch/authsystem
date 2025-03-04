@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Eye, EyeOff } from "lucide-react"
+import { toast } from "@/components/ui/use-toast"
 
 // Form validation schema
 const loginSchema = z.object({
@@ -20,14 +21,16 @@ const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 })
 
+type LoginData = z.infer<typeof loginSchema>
+
 export default function LoginPage() {
   const router = useRouter()
-  const { login } = useAuth()
-  const [formData, setFormData] = useState({
+  const { signInWithEmail } = useAuth()
+  const [formData, setFormData] = useState<LoginData>({
     email: "",
     password: "",
   })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [errors, setErrors] = useState<Partial<LoginData>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -38,8 +41,11 @@ export default function LoginPage() {
     const errorDescription = params.get('error_description');
 
     if (errorCode && errorCode.startsWith('4')) {
-      // Show error message if error is a 4xx error
-      window.alert(errorDescription);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorDescription || 'An error occurred',
+      });
     }
   }, [router]);
 
@@ -47,40 +53,41 @@ export default function LoginPage() {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
     // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
-      })
-    }
+    setErrors((prev) => ({ ...prev, [name]: undefined }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setErrors({}) // Clear previous errors
 
     try {
       // Validate form data
-      const validatedData = loginSchema.parse(formData)
+      loginSchema.parse(formData)
 
       // Attempt login
-      await login(validatedData.email, validatedData.password)
+      await signInWithEmail(formData.email, formData.password)
 
       // Redirect to dashboard on success
       router.push("/dashboard")
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
-        // Handle validation errors
-        const newErrors: Record<string, string> = {}
+        // Handle validation errors (simplified)
+        const newErrors: Partial<LoginData> = {}
         error.errors.forEach((err) => {
           if (err.path[0]) {
-            newErrors[err.path[0].toString()] = err.message
+            newErrors[err.path[0] as keyof LoginData] = err.message
           }
         })
         setErrors(newErrors)
+      } else {
+        // Handle API errors (e.g., incorrect credentials)
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: error.message || "Invalid email or password.",
+        })
       }
-      // API errors are handled by the auth context
     } finally {
       setIsLoading(false)
     }
