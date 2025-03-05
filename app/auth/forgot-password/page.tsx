@@ -52,6 +52,7 @@ export default function ForgotPasswordPage() {
     setMessage("");
 
     const formData = { email: email }
+    
     const errors = validateForm(formData);
 
     if (errors) {

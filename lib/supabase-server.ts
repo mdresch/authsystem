@@ -1,38 +1,25 @@
+// lib/supabase-server.ts (CORRECT - Using cookies() helper)
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { type NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-export const createSupabaseServerClient = (context: {
-  req: NextRequest,
-  res: NextResponse
-}) => {
-  const { req, res } = context;
+export const createSupabaseServerClient = () => { // No context parameter!
+  const cookieStore = cookies();
 
-  const supabase = createServerClient(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!, // Use the SERVICE ROLE KEY
     {
       cookies: {
         get(name: string) {
-          return req.cookies.get(name)?.value;
+          return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          req.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-          res.cookies.set(name, value, options);
+          cookieStore.set({ name, value, ...options });
         },
         remove(name: string, options: CookieOptions) {
-          req.cookies.set({
-            name,
-            value: '',  // Empty value to remove
-            ...options,
-          });
-          res.cookies.set(name, "", options);
+          cookieStore.delete({ name, ...options });
         },
       },
     }
   );
-  return supabase;
-}
+};

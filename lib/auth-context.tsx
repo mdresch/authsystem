@@ -1,11 +1,12 @@
 "use client"
 
 import type React from "react"
-
+import { headers } from "next/headers"
 import { createContext, useContext, useState, useEffect } from "react"
 import { supabaseClient } from "./supabase-client"
 import { useToast } from "@/components/ui/use-toast"
 import { User } from '@supabase/supabase-js'
+import { requestPasswordReset } from "@/app/actions"
 
 interface AuthContextProps {
   user: User | null
@@ -18,7 +19,7 @@ interface AuthContextProps {
   resetPassword: (token: string, newPassword: string) => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
   getProfile: (userId: string) => Promise<any>
-  createProfile: (userId: string, name: string) => Promise<void> // Changed parameter name
+  createProfile: (userId: string, name: string) => Promise<void>
   updateProfile: (userId: string, data: { fullName?: string; bio?: string; avatarUrl?: string | null; website?: string; firstName?: string; lastName?: string }) => Promise<void>
 }
 
@@ -93,41 +94,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     await supabaseClient.auth.signOut()
   }
-    const requestPasswordReset = async (email: string): Promise<string> => {
-    try {
-        setIsLoading(true);
-        const redirectURL = `${window.location.origin}/auth/reset-password?reset=true`;
-        console.log("Constructed redirectURL:", redirectURL); // Keep for debugging
-
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(
-        email,
-        {
-            redirectTo: redirectURL,
-        }
-        );
-        console.log("Supabase response error:", error); // Log any Supabase error
-
-        if (error) throw error;
-
-        toast({
-        title: "Password reset email sent",
-        description: "Check your email for the reset link.",
-        });
-
-        return "Password reset email sent";
-    } catch (error) {
-        console.error("requestPasswordReset error:", error); // Log full error
-        toast({
-        variant: "destructive",
-        title: "Password reset failed",
-        description:
-            error instanceof Error ? error.message : "An unknown error occurred",
-        });
-        throw error;
-    } finally {
-        setIsLoading(false);
-    }
-    };
 
   const resetPassword = async (token: string, newPassword: string) => {
     const { error } = await supabaseClient.auth.updateUser({
@@ -142,20 +108,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   }
-    interface UpdateProfileData {
-        fullName?: string; // Keep this as fullName
-        bio?: string;
-        avatarUrl?: string | null;
-        website?: string;
-        firstName?: string;
-        lastName?: string;
-    }
+
+  interface UpdateProfileData {
+    fullName?: string;
+    bio?: string;
+    avatarUrl?: string | null;
+    website?: string;
+    firstName?: string;
+    lastName?: string;
+  }
 
   const updateProfile = async (userId: string, data: UpdateProfileData) => {
     const { error } = await supabaseClient
       .from("profiles")
       .update({
-        name: data.fullName, // Use 'name' here too
+        name: data.fullName,
         bio: data.bio,
         avatar_url: data.avatarUrl || null,
         website: data.website,
@@ -168,7 +135,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(error.message);
     }
   }
-
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
     if (!user) throw new Error("Not authenticated")
@@ -205,28 +171,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (profileError) {
       throw new Error(profileError.message);
     }
-    return profileData; // Return only the profile data
+    return profileData;
   };
 
-    const createProfile = async (userId: string, name: string) => { // Changed parameter name
+  const createProfile = async (userId: string, name: string) => {
     console.log("createProfile - userId:", userId);
-    console.log("createProfile - name:", name); // Changed log
+    console.log("createProfile - name:", name);
     const { error, data } = await supabaseClient
-        .from("profiles")
-        .insert([
+      .from("profiles")
+      .insert([
         {
-            id: userId,
-            name: name, // Corrected: Use 'name'
+          id: userId,
+          name: name,
         },
-        ]);
+      ]);
     console.log("createProfile - Supabase response data:", data);
     console.log("createProfile - Supabase response error:", error);
 
-
     if (error) {
-        throw new Error(error.message);
+      throw new Error(error.message);
     }
-    };
+  };
 
   const value = {
     user,
