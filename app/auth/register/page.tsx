@@ -1,6 +1,7 @@
+// app/auth/register/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react"; // Consistent import style
+import React, { useState, useEffect, Suspense } from "react"; // Import Suspense
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z, ZodError } from "zod";
@@ -114,135 +115,138 @@ export default function RegisterPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">
-              Create an account
-            </CardTitle>
-            <CardDescription>
-              Enter your information to create an account
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="John Doe"
-                  value={formData.name}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  required
-                />
-                {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  required
-                  autoComplete="username"
-                />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
+        {/* Wrap with Suspense */}
+        <Suspense fallback={<p>Loading...</p>}>
+          <Card className="w-full max-w-md">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl font-bold">
+                Create an account
+              </CardTitle>
+              <CardDescription>
+                Enter your information to create an account
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
                   <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                    required
-                    autoComplete="new-password"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="sr-only">
-                      {showPassword ? "Hide password" : "Show password"}
-                    </span>
-                  </Button>
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
+                    id="name"
+                    name="name"
+                    placeholder="John Doe"
+                    value={formData.name}
                     onChange={handleChange}
                     disabled={isLoading}
                     required
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="sr-only">
-                      {showConfirmPassword ? "Hide password" : "Show password"}
-                    </span>
-                  </Button>
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name}</p>
+                  )}
                 </div>
-                {errors.confirmPassword && (
-                  <p className="text-sm text-destructive">
-                    {errors.confirmPassword}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col">
-              <Button className="w-full" type="submit" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Create account"}
-              </Button>
-              <p className="mt-4 text-center text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <Link
-                  href="/auth/login"
-                  className="text-primary underline-offset-4 hover:underline"
-                >
-                  Sign in
-                </Link>
-              </p>
-            </CardFooter>
-          </form>
-        </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    required
+                    autoComplete="username"
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      required
+                      autoComplete="new-password"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="sr-only">
+                        {showPassword ? "Hide password" : "Show password"}
+                      </span>
+                    </Button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-sm text-destructive">{errors.password}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="sr-only">
+                        {showConfirmPassword ? "Hide password" : "Show password"}
+                      </span>
+                    </Button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-sm text-destructive">
+                      {errors.confirmPassword}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col">
+                <Button className="w-full" type="submit" disabled={isLoading}>
+                  {isLoading ? "Creating account..." : "Create account"}
+                </Button>
+                <p className="mt-4 text-center text-sm text-muted-foreground">
+                  Already have an account?{" "}
+                  <Link
+                    href="/auth/login"
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </CardFooter>
+            </form>
+          </Card>
+        </Suspense>
       </main>
       <Footer />
     </div>
