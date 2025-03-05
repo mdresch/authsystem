@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react"; // Import Suspense
+import React, { useState, useEffect } from "react"; // NO Suspense here
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z, ZodError } from "zod";
@@ -42,14 +42,17 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [shouldRenderForm, setShouldRenderForm] = useState(false); // Add this state
-  const searchParams = useSearchParams();
+  // NO useSearchParams here!
+  const [shouldRenderForm, setShouldRenderForm] = useState(false);
 
   useEffect(() => {
-    const shouldReset = searchParams.get('reset');
-    setShouldRenderForm(!!shouldReset); // Set based on presence of 'reset'
-  }, [searchParams]);
-
+    // Use window.location.search INSIDE useEffect
+    if (typeof window !== 'undefined') { // Check for window
+        const searchParams = new URLSearchParams(window.location.search);
+        const shouldReset = searchParams.get('reset');
+        setShouldRenderForm(!!shouldReset);
+    }
+  }, []); // Empty dependency array: only run once, on mount
 
   const validateForm = (data: ResetPasswordData) => {
     try {
@@ -79,126 +82,120 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      await resetPassword("", newPassword); // Pass empty string for token
+      await resetPassword("", newPassword);
       toast({
         title: "Success",
         description: "Password reset successfully! You can now log in.",
       });
       router.push("/auth/login");
-
-    } catch (error: any) { // Type the error
+    } catch (error: any) {
       setMessage(error.message || "Error resetting password.");
       toast({
         variant: "destructive",
         title: "Password reset failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-      })
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-    if (!shouldRenderForm) {
+  if (!shouldRenderForm) {
     return null; // Or a loading indicator, or a message, etc.
   }
-
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 flex items-center justify-center p-4">
-        {/* Wrap the ENTIRE Card with Suspense */}
-        <Suspense fallback={<p>Loading form...</p>}>
-          <Card className="w-full max-w-md">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold">
-                Reset password
-              </CardTitle>
-              <CardDescription>
-                Enter your new password below
-              </CardDescription>
-            </CardHeader>
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="newPassword"
-                      type={showPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                      <span className="sr-only">
-                        {showPassword ? "Hide password" : "Show password"}
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                      <span className="sr-only">
-                        {showConfirmPassword ? "Hide password" : "Show password"}
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col">
-                <Button className="w-full" type="submit" disabled={isLoading}>
-                  {isLoading ? "Resetting..." : "Reset Password"}
-                </Button>
-                {message && (
-                  <p className="mt-4 text-center text-sm text-muted-foreground">
-                    {message}
-                  </p>
-                )}
-                <p className="mt-4 text-center text-sm text-muted-foreground">
-                  Remember your password?{" "}
-                  <Link
-                    href="/auth/login"
-                    className="text-primary underline-offset-4 hover:underline"
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Reset password</CardTitle>
+            <CardDescription>
+              Enter your new password below
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
                   >
-                    Sign in
-                  </Link>
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span className="sr-only">
+                      {showPassword ? "Hide password" : "Show password"}
+                    </span>
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span className="sr-only">
+                      {showConfirmPassword ? "Hide password" : "Show password"}
+                    </span>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col">
+              <Button className="w-full" type="submit" disabled={isLoading}>
+                {isLoading ? "Resetting..." : "Reset Password"}
+              </Button>
+              {message && (
+                <p className="mt-4 text-center text-sm text-muted-foreground">
+                  {message}
                 </p>
-              </CardFooter>
-            </form>
-          </Card>
-        </Suspense>
+              )}
+              <p className="mt-4 text-center text-sm text-muted-foreground">
+                Remember your password?{" "}
+                <Link
+                  href="/auth/login"
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
       </main>
       <Footer />
     </div>
