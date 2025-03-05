@@ -1,4 +1,3 @@
-// app/auth/register/page.tsx
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react"; // Import Suspense
@@ -22,7 +21,7 @@ import { Footer } from "@/components/layout/footer";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
-// Form validation schema
+// Form validation schema (remains the same) ...
 const registerSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -80,16 +79,15 @@ export default function RegisterPage() {
       await register(formData.name, formData.email, formData.password);
       toast({
         title: "Registration successful",
-        description: "Please check your email to verify your account.", // This message is shown, but verification is simulated.
+        description: "Please check your email to verify your account.",
       });
-      router.push("/auth/login"); // Redirect to login after successful registration.
+      router.push("/auth/login");
     } catch (error: any) {
-      // Use 'any' for error type
       if (error instanceof ZodError) {
         const newErrors: Partial<RegisterData> = {};
         error.errors.forEach((err) => {
           if (err.path[0]) {
-            newErrors[err.path[0] as keyof RegisterData] = err.message; // Cast to keyof
+            newErrors[err.path[0] as keyof RegisterData] = err.message;
           }
         });
         setErrors(newErrors);
@@ -103,7 +101,7 @@ export default function RegisterPage() {
     }
   };
 
-  if (isLoading) {
+    if (isLoading) {
     return <div>Loading...</div>;
   }
   if (user) {
@@ -111,11 +109,12 @@ export default function RegisterPage() {
     return <div>Redirecting...</div>;
   }
 
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 flex items-center justify-center p-4">
-        {/* Wrap with Suspense */}
+        {/* Wrap the ENTIRE Card with Suspense */}
         <Suspense fallback={<p>Loading...</p>}>
           <Card className="w-full max-w-md">
             <CardHeader className="space-y-1">
