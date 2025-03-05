@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { z, ZodError } from "zod"
@@ -39,42 +37,13 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [shouldRenderForm, setShouldRenderForm] = useState(false)
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    // Check for the 'reset' query parameter
     const shouldReset = searchParams.get('reset');
-    if (!shouldReset) {
-      // If no reset, redirect to login
-      router.push("/auth/login");
-      return;
-    }
-
-    // Check for error details in the URL
-    const urlParams = new URLSearchParams(window.location.hash.slice(1));
-    const errorCode = urlParams.get('error_code');
-    const errorDescription = urlParams.get('error_description');
-    const token = urlParams.get('access_token');
-
-    if (errorCode && errorCode === 'otp_expired') {
-      setMessage("The password reset link has expired. Please request a new link.");
-      toast({
-        variant: "destructive",
-        title: "Expired Link",
-        description: "The password reset link has expired. Please request a new link.",
-      });
-      router.push("/auth/forgot-password");
-
-    } else if (!token) {
-      setMessage("Invalid or missing token. Please request a new password reset link.");
-      toast({
-        variant: "destructive",
-        title: "Invalid Token",
-        description: "Invalid or missing token. Please request a new password reset link.",
-      });
-      router.push("/auth/forgot-password");
-    }
-  }, [router, searchParams]);
+    setShouldRenderForm(!!shouldReset);
+  }, [searchParams]);
 
   // Zod Validation Function
   const validateForm = (data: ResetPasswordData) => {
@@ -107,26 +76,12 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      // Get token from URL
-      const urlParams = new URLSearchParams(window.location.hash.slice(1));
-      const token = urlParams.get('access_token');
-
-      if (!token) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Token is missing",
-        });
-        return;
-      }
-
-      await resetPassword(token, newPassword);
+      await resetPassword("", newPassword);
       toast({
         title: "Success",
         description: "Password reset successfully! You can now log in.",
       });
       router.push("/auth/login");
-
     } catch (error: any) { // Type the error
       setMessage(error.message || "Error resetting password.");
       toast({
@@ -137,6 +92,11 @@ export default function ResetPasswordPage() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Conditionally render the form based on shouldRenderForm
+  if (!shouldRenderForm) {
+    return null; // Or a loading indicator, or a message, etc.
   }
 
   return (
