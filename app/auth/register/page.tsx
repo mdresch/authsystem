@@ -1,20 +1,25 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { z, ZodError } from "zod"
-import { useAuth } from "@/lib/auth-context"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { Eye, EyeOff } from "lucide-react"
-import { toast } from "@/components/ui/use-toast"
+import React, { useState, useEffect } from "react"; // Consistent import style
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { z, ZodError } from "zod";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { Eye, EyeOff } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 // Form validation schema
 const registerSchema = z
@@ -27,82 +32,82 @@ const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
-  })
+  });
 
 // Create a type from the schema
-type RegisterData = z.infer<typeof registerSchema>
+type RegisterData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const { register, isLoading, user } = useAuth()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { register, isLoading, user } = useAuth();
   const [formData, setFormData] = useState<RegisterData>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-  })
-  const [errors, setErrors] = useState<Partial<RegisterData>>({})
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  });
+  const [errors, setErrors] = useState<Partial<RegisterData>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
-    // Parse the URL hash for error details
-    const params = new URLSearchParams(window.location.hash.slice(1))
-    const errorCode = params.get('error_code')
-    const errorDescription = params.get('error_description')
+    const errorCode = searchParams.get("error_code");
+    const errorDescription = searchParams.get("error_description");
 
-    if (errorCode && errorCode.startsWith('4')) {
+    if (errorCode && errorCode.startsWith("4")) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: errorDescription || 'An error occurred',
-      })
+        description: errorDescription || "An error occurred",
+      });
     }
-  }, [router])
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-    setErrors(prev => ({ ...prev, [name]: undefined })) // Clear error
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined })); // Clear error
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrors({}) // Clear previous errors
+    e.preventDefault();
+    setErrors({}); // Clear previous errors
 
     try {
-      registerSchema.parse(formData) // Validate with Zod
-      await register(formData.name, formData.email, formData.password)
+      registerSchema.parse(formData); // Validate with Zod
+      await register(formData.name, formData.email, formData.password);
       toast({
         title: "Registration successful",
-        description: "Please check your email to verify your account.",
-      })
-      router.push("/auth/verify") // Consider redirecting to login instead
-    } catch (error: any) { // Use 'any' for error type
+        description: "Please check your email to verify your account.", // This message is shown, but verification is simulated.
+      });
+      router.push("/auth/login"); // Redirect to login after successful registration.
+    } catch (error: any) {
+      // Use 'any' for error type
       if (error instanceof ZodError) {
-        const newErrors: Partial<RegisterData> = {}
+        const newErrors: Partial<RegisterData> = {};
         error.errors.forEach((err) => {
           if (err.path[0]) {
-            newErrors[err.path[0] as keyof RegisterData] = err.message // Cast to keyof
+            newErrors[err.path[0] as keyof RegisterData] = err.message; // Cast to keyof
           }
-        })
-        setErrors(newErrors)
+        });
+        setErrors(newErrors);
       } else {
         toast({
           variant: "destructive",
           title: "Registration failed",
           description: error.message || "An unknown error occurred",
-        })
+        });
       }
     }
-  }
+  };
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
   if (user) {
-    router.replace("/")
-    return <div>Redirecting...</div>
+    router.replace("/");
+    return <div>Redirecting...</div>;
   }
 
   return (
@@ -111,8 +116,12 @@ export default function RegisterPage() {
       <main className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-            <CardDescription>Enter your information to create an account</CardDescription>
+            <CardTitle className="text-2xl font-bold">
+              Create an account
+            </CardTitle>
+            <CardDescription>
+              Enter your information to create an account
+            </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
@@ -127,7 +136,9 @@ export default function RegisterPage() {
                   disabled={isLoading}
                   required
                 />
-                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                {errors.name && (
+                  <p className="text-sm text-destructive">{errors.name}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -142,7 +153,9 @@ export default function RegisterPage() {
                   required
                   autoComplete="username"
                 />
-                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -169,10 +182,14 @@ export default function RegisterPage() {
                     ) : (
                       <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                    <span className="sr-only">
+                      {showPassword ? "Hide password" : "Show password"}
+                    </span>
                   </Button>
                 </div>
-                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -198,10 +215,16 @@ export default function RegisterPage() {
                     ) : (
                       <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+                    <span className="sr-only">
+                      {showConfirmPassword ? "Hide password" : "Show password"}
+                    </span>
                   </Button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive">
+                    {errors.confirmPassword}
+                  </p>
+                )}
               </div>
             </CardContent>
             <CardFooter className="flex flex-col">
@@ -210,7 +233,10 @@ export default function RegisterPage() {
               </Button>
               <p className="mt-4 text-center text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link href="/auth/login" className="text-primary underline-offset-4 hover:underline">
+                <Link
+                  href="/auth/login"
+                  className="text-primary underline-offset-4 hover:underline"
+                >
                   Sign in
                 </Link>
               </p>
@@ -220,6 +246,5 @@ export default function RegisterPage() {
       </main>
       <Footer />
     </div>
-  )
+  );
 }
-
