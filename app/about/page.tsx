@@ -1,3 +1,4 @@
+// app/about/page.tsx
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import Link from "next/link"
@@ -19,15 +20,7 @@ export default function AboutPage() {
             and best practices, please visit our documentation site:
           </p>
           <p className="text-center">
-            <Link
-              href="http://localhost:3000" // Use this during development
-              // In production, you'd use:
-              // href="/"  // If Docusaurus is at the root
-              // href="/docs" // If Docusaurus is in a /docs subdirectory
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:underline"
-            >
+            <Link href="/dino" >
               View Documentation
             </Link>
           </p>
@@ -35,9 +28,10 @@ export default function AboutPage() {
             Key technologies used include: Next.js (App Router), React, TypeScript,
             Tailwind CSS, shadcn/ui, Zod, Lucide Icons, and Supabase.
           </p>
+
         </div>
       </main>
       <Footer />
     </div>
-  )
+  );
 }
