@@ -3,15 +3,5 @@
   "rewrites": [
     { "source": "/docs/(.*)", "destination": "/dino/build/$1" }
   ],
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    },
-    {
-      "src": "dino/package.json",
-      "use": "@vercel/static"
-    }
-  ],
   "trailingSlash": false
 }
