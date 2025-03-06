@@ -9,7 +9,7 @@ echo "Current PATH before modification: $PATH"  # Added: Show current PATH
 
 echo "Executing Docusaurus build..." # Added: Confirmation message
 
-docusaurus build  # Execute docusaurus directly
+yarn run build  # Execute docusaurus directly
 
 echo "Docusaurus build completed."  # Added: Completion message
 
