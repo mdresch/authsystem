@@ -7,19 +7,20 @@ npm install
 
 echo "Current PATH before modification: $PATH"  # Added: Show current PATH
 
+export PATH=$PATH:./node_modules/.bin  # Keep this!
+
+echo "Current PATH after modification: $PATH"
+
 echo "Executing Docusaurus build..." # Added: Confirmation message
 
-yarn run build  # Execute docusaurus directly
+docusaurus build # Execute docusaurus directly
 
 echo "Docusaurus build completed."  # Added: Completion message
 
 echo "Checking the built Docusaurus directory:"
-ls -l ./build #addedL show the details for the build path
+ls -l build #addedL show the details for the build path
 echo "Files inside the build directory:" # more details
-find ./build -type f # find the path
-
-echo "Docusaurus Routes:"
-npx docusaurus routes show # show the routes
+find build -type f # find the path
 
 cd .. # Go back to the root
 
