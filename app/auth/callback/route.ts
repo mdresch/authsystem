@@ -11,10 +11,7 @@ export async function GET(request: NextRequest) {
   const redirectTo = requestUrl.searchParams.get("redirect_to")?.toString();
 
   if (code) {
-    const supabase = await createSupabaseServerClient({
-      req: request,
-      res: NextResponse.next({ request }),
-    });
+    const supabase = await createSupabaseServerClient();
     await supabase.auth.exchangeCodeForSession(code);
   }
 

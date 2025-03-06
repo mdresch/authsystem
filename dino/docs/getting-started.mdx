@@ -1,0 +1,114 @@
+# Getting Started
+
+This guide will walk you through the steps to set up and run the authentication system locally.
+
+## Prerequisites
+
+- Node.js (version 18 or later recommended)
+- npm or Yarn
+- A Supabase account (free tier is sufficient for development)
+
+## Installation
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone <your-repository-url>
+    cd <your-project-directory>
+    ```
+    Replace `<your-repository-url>` with the *actual* URL of your Git repository.
+
+2.  **Install dependencies:**
+
+    ```bash
+    npm install  # Or yarn install
+    ```
+
+3.  **Create a Supabase project:**
+
+    - Go to [https://supabase.com](https://supabase.com) and create a free account.
+    - Create a new project.
+    - Obtain your project URL and API keys (you'll need these in the next step). Find these in your project's settings.
+
+4.  **Create a `.env.local` file:**
+
+    - In the *root* of your Next.js project (i.e., *outside* the `dino` directory), create a file named `.env.local`.
+    - Add the following environment variables, replacing the placeholders with your *actual* Supabase credentials:
+
+    ```
+    NEXT_PUBLIC_SUPABASE_URL="YOUR_SUPABASE_PROJECT_URL"
+    NEXT_PUBLIC_SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY"
+    SUPABASE_SERVICE_ROLE_KEY="YOUR_SUPABASE_SERVICE_ROLE_KEY"
+    ```
+
+    **Important:** Never commit your `.env.local` file to version control! It contains secrets. Make sure it's in your `.gitignore` file.
+
+5.  **Run the development server:**
+
+    ```bash
+    npm run dev:all  # Or whatever command you set up to run both servers concurrently
+    ```
+
+6.  **Open your browser:**
+
+    - **Next.js Application:** Go to `http://localhost:3001` (or the port your Next.js server is using).
+    - **Docusaurus Documentation:** Go to `http://localhost:3000` (or the port your Docusaurus server is using).
+
+## Usage
+
+- **Register:** Click the "Register" link and create a new account. Note that email verification is currently *simulated*.
+- **Login:** Log in with your email and password.
+- **Forgot Password:** Click the "Forgot Password" link and follow the instructions to reset your password.
+- **Dashboard:** After logging in, you'll be redirected to the dashboard (which is currently a placeholder).
+
+## File Structure
+
+auth-system/
+├── app/
+│ ├── about/
+│ │ └── page.tsx
+│ ├── auth/
+│ │ ├── forgot-password/
+│ │ │ └── page.tsx
+│ │ └── reset-password/
+│ │ └── page.tsx
+│ ├── login/
+│ │ └── page.tsx
+│ ├── register/
+│ │ └── page.tsx
+│ ├── dashboard/
+│ │ └── page.tsx
+│ ├── profile/
+│ │ └── page.tsx
+│ ├── chat/
+│ │ └── page.tsx
+│ ├── page.tsx
+│ └── layout.tsx
+├── components/
+│ ├── chat/
+│ │ ├── chat-input.tsx
+│ │ ├── chat-message.tsx
+│ │ ├── message-history-sidebar.tsx
+│ │ └── model-details-sidebar.tsx
+│ ├── layout/
+│ │ ├── header.tsx
+│ │ └── footer.tsx
+│ └── ui/
+│ ├── button.tsx
+│ ├── dropdown-menu.tsx
+│ └── scroll-area.tsx
+├── lib/
+│ ├── auth-context.tsx
+│ ├── supabase-client.ts
+│ └── supabase-server.ts
+├── styles/
+│ └── globals.css
+├── public/
+│ └── (any static assets, if applicable)
+└── package.json
+
+## Environment Variables
+
+-   `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL.
+-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key.
+-   `SUPABASE_SERVICE_ROLE_KEY`:  Your Supabase service role key (for server-side operations). *Keep this secret!*

@@ -54,7 +54,7 @@ const modelDetails = {
 
 export default function ChatPage() {
   const router = useRouter()
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [isTyping, setIsTyping] = useState(false)
   const [isPageLoaded, setIsPageLoaded] = useState(false)
@@ -66,10 +66,10 @@ export default function ChatPage() {
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!loading && !user) {
+    if (!user) {
       router.push("/auth/login")
     }
-  }, [loading, user, router])
+  }, [user, router])
 
   // Set page as loaded after a short delay for animation purposes
   useEffect(() => {
@@ -160,7 +160,7 @@ export default function ChatPage() {
     console.log(`Selected conversation: ${id}`)
   }
 
-  if (loading) {
+  if (!user) {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />

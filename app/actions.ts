@@ -7,8 +7,10 @@ import { headers } from "next/headers";
 // import { cookies } from "next/headers";     // No need to import here
 
 export async function requestPasswordReset(email: string): Promise<string> {
-  const supabase = createSupabaseServerClient(); // Call it directly, no arguments!
-  const origin = headers().get("origin");
+  const supabase = await createSupabaseServerClient(); // Await the client creation
+  
+  // Await the headers to get the actual headers object
+  const origin = (await headers()).get("origin");
   const callbackURL = `${origin}/auth/callback?redirect_to=/auth/reset-password`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(

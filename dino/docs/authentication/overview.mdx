@@ -1,0 +1,26 @@
+# Authentication Overview
+
+This section provides a detailed overview of the authentication features in this project.
+
+## Features
+
+- **User Registration:**  Users can create new accounts with a name, email, and password.
+- **Login:**  Registered users can log in with their email and password.
+- **Password Reset:**  Users can reset their password if they forget it.
+- **Email Verification (Simulated):** Email verification is currently *simulated*.  No actual verification email is sent.  To implement real email verification, you would need to integrate with an email service (e.g., SendGrid, Mailgun, Resend) or use Supabase's built-in email functionality.
+- **Protected Routes:**  Certain routes (like the dashboard) are only accessible to logged-in users.
+
+## Technologies
+
+- **Supabase Auth:**  Used for user management and authentication.
+- **Next.js Server Actions:** Used for secure server-side logic.
+- **Zod:** Used for form validation.
+- **PKCE (Proof Key for Code Exchange):** Used for enhanced security in the password reset flow.
+
+## Navigation
+
+- [Registration](/dino/docs/authentication/registration): Details on the registration process.
+- [Login](/dino/docs/authentication/login):  (Create this page if you have specific login instructions)
+- [Forgot Password](/dino/docs/authentication/forgot-password): (Create this page if you have specific forgot password instructions)
+- [Reset Password](/dino/docs/authentication/reset-password): (Create this page)
+- [Email Verification](/dino/docs/authentication/email-verification): (Create this page to explain the simulation or your real implementation)
