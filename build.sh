@@ -18,6 +18,8 @@ ls -l ./build #addedL show the details for the build path
 echo "Files inside the build directory:" # more details
 find ./build -type f # find the path
 
+echo "Docusaurus Routes:"
+npx docusaurus routes show # show the routes
 
 cd .. # Go back to the root
 
