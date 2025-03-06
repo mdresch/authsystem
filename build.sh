@@ -4,7 +4,8 @@ set -e # Exit immediately if a command exits with a non-zero status.
 echo "Building Docusaurus (dino)..."
 cd dino
 npm install
-npm run build
+node_modules/.bin/docusaurus build  # **MODIFIED LINE: Explicit path to docusaurus**
+
 cd .. # Go back to the root
 
 echo "Building Next.js (main)..."
