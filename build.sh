@@ -13,6 +13,12 @@ yarn run build  # Execute docusaurus directly
 
 echo "Docusaurus build completed."  # Added: Completion message
 
+echo "Checking the built Docusaurus directory:"
+ls -l ./build #addedL show the details for the build path
+echo "Files inside the build directory:" # more details
+find ./build -type f # find the path
+
+
 cd .. # Go back to the root
 
 echo "Building Next.js (main)..."
