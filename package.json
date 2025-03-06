@@ -6,7 +6,7 @@
     "dev": "next dev -p 3001",
     "dev:docs": "cd dino && npm start",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:docs\"",
-    "build": "npm run build:docs && next build",
+    "build": "next build",
     "build:docs": "cd dino && npm run build",
     "start": "next start",
     "lint": "next lint"
