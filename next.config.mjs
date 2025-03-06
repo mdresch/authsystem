@@ -23,7 +23,6 @@ const nextConfig = {
     };
     return config;
   },
-  output: 'export',  // <---- ADD THIS LINE
 };
 
 function mergeConfig(nextConfig, userConfig) {
