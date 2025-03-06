@@ -75,7 +75,7 @@
   },
   "devDependencies": {
     "@types/next-auth": "^3.15.0",
-    "@types/node": "^22",
+    "@types/node": "^22.13.9",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "concurrently": "^9.1.2",

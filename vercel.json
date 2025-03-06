@@ -1,0 +1,24 @@
+{
+    "version": 2,
+    "rewrites": [
+      { "source": "/docs/(.*)", "destination": "/dino/build/$1" }
+    ],
+    "routes": [
+      {
+        "src": "/docs",
+        "dest": "/dino/build/index.html"
+      }
+    ],
+    "builds": [
+      {
+        "src": "package.json",
+        "use": "@vercel/next"
+      },
+      {
+        "src": "dino/package.json",
+        "use": "@vercel/static",
+        "dest": "dino/build"
+      }
+    ],
+    "trailingSlash": false
+  }
