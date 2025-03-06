@@ -1,7 +1,0 @@
-{
-  "version": 2,
-  "rewrites": [
-    { "source": "/docs/(.*)", "destination": "/dino/build/$1" }
-  ],
-  "trailingSlash": false
-}
