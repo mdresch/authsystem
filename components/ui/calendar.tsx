@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker } from "react-day-picker"
+import { DayPicker, DayPickerProps } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -54,8 +54,11 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
+        // Use the correct properties or extend the type if necessary
+        // If IconLeft and IconRight are not valid, you may need to remove or replace them
+        // Example of using default icons or other valid properties
+        // IconLeft: CustomIconLeft, // Define CustomIconLeft if needed
+        // IconRight: CustomIconRight, // Define CustomIconRight if needed
       }}
       {...props}
     />
