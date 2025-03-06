@@ -3,12 +3,6 @@
   "rewrites": [
     { "source": "/docs/(.*)", "destination": "/dino/build/$1" }
   ],
-  "routes": [
-    {
-      "src": "/docs",
-      "dest": "/dino/build/index.html"
-    }
-  ],
   "builds": [
     {
       "src": "package.json",
