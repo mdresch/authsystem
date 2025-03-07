@@ -20,7 +20,7 @@ export default function AboutPage() {
             and best practices, please visit our documentation site:
           </p>
           <p className="text-center">
-            <Link href="/dino" >
+            <Link href="" >
               View Documentation
             </Link>
           </p>
