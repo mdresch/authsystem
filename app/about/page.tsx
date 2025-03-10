@@ -2,6 +2,8 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+
 
 export default function AboutPage() {
   return (
@@ -22,11 +24,11 @@ export default function AboutPage() {
             For detailed documentation, including installation instructions, API references,
             and best practices, please visit our documentation site:
           </p>
-          <p className="text-center">
-            <Link href="https://cba-auth.hashnode.space">
-              View Documentation
-            </Link>
-          </p>
+            <Button>
+              <Link href="https://cba-auth.hashnode.space">
+                View Documentation
+              </Link>
+            </Button>
           <p>
             Key technologies used include: Next.js (App Router), React, TypeScript,
             Tailwind CSS, shadcn/ui, Zod, Lucide Icons, and Supabase.
