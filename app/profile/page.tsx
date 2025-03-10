@@ -12,7 +12,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase-client";
+import { supabaseClient } from "@/lib/supabase-client";
 
 interface ProfileData {
   id: string;
@@ -124,7 +124,7 @@ const ProfilePage = () => {
     try {
       console.log("Updating profile with data:", profileData);
 
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from("profiles")
         .update({
           updated_at: new Date().toISOString(),
