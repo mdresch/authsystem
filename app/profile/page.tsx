@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect, useRef } from "react"; // Import useRef
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase-client";
 
 interface ProfileData {
   id: string;
@@ -39,8 +39,6 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const realtimeSubscription = useRef<any>(null); // Use useRef to store the subscription
-
   // Redirect if not logged in
   useEffect(() => {
     if (!user && !isLoading) {
@@ -48,7 +46,7 @@ const ProfilePage = () => {
     }
   }, [user, isLoading, router]);
 
-  // Fetch user data on mount and set up Realtime subscription
+  // Fetch user data on mount
   useEffect(() => {
     const fetchUserData = async () => {
       if (user) {
@@ -73,30 +71,6 @@ const ProfilePage = () => {
             customcategories: userData.customcategories || null,
             bio: userData.bio || null,
           });
-
-          // Subscribe to Realtime updates
-          if (!realtimeSubscription.current) {
-            realtimeSubscription.current = supabase
-              .channel('any') // you can use any string
-              .on(
-                'postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
-                (payload) => {
-                  console.log('Realtime update received!', payload)
-                  // Update the profile data with the new data from the payload
-                  setProfileData((prevProfileData: ProfileData | null) => {
-                    if (prevProfileData && prevProfileData.id === payload.new.id) {
-                      return {
-                        ...prevProfileData,
-                        ...payload.new,
-                      };
-                    }
-                    return prevProfileData;
-                  });
-                }
-              )
-              .subscribe();
-          }
         } catch (error) {
           console.error("Error fetching profile:", error);
           toast({
@@ -111,27 +85,20 @@ const ProfilePage = () => {
       }
     };
     fetchUserData();
-
-    // Unsubscribe from Realtime when the component unmounts
-    return () => {
-      if (realtimeSubscription.current) {
-        supabase.removeChannel(realtimeSubscription.current)
-      }
-    };
   }, [user, getProfile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-  
+
     console.log(`Input changed: Name - ${name}, Value - ${value}`);
-  
+
     setProfileData((prev) => {
       if (prev) {
         return { ...prev, [name]: value };
       }
       return prev;
     });
-  
+
     console.log("Updated profileData:", { ...profileData, [name]: value });
   };
 
@@ -155,12 +122,12 @@ const ProfilePage = () => {
     }
 
     try {
-      console.log("Updating profile with data:", profileData); // Debugging log
+      console.log("Updating profile with data:", profileData);
 
       const { error } = await supabase
         .from("profiles")
         .update({
-          updated_at: new Date().toISOString(), // Update with current timestamp
+          updated_at: new Date().toISOString(),
           username: profileData.username,
           avatar_url: profileData.avatar_url,
           website: profileData.website,
@@ -195,7 +162,7 @@ const ProfilePage = () => {
         return;
       }
 
-      console.log("Profile updated successfully"); // Debugging log
+      console.log("Profile updated successfully");
 
       // Fetch the latest profile data after update
       const updatedUserData = await getProfile(user.id);

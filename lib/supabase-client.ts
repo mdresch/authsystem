@@ -1,3 +1,4 @@
+// lib/supabase-client.ts
 import { createBrowserClient } from '@supabase/ssr';
 
 export const supabaseClient = createBrowserClient(
@@ -7,4 +8,4 @@ export const supabaseClient = createBrowserClient(
 
 export const config = {
     matcher: ['/dashboard/:path*', '/auth/login'],
-  }; 
+  };

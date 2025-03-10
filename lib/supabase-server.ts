@@ -16,8 +16,8 @@ export const createSupabaseServerClient = async () => { // No context parameter!
         async set(name: string, value: string, options: CookieOptions) {
           (await cookieStore).set({ name, value, ...options });
         },
-        async remove(name: string, options: CookieOptions) {
-          (await cookieStore).delete({ name, ...options });
+        async remove(name: string, value: string, options: CookieOptions) {
+          (await cookieStore).delete({ name, value, ...options });
         },
       },
     }
