@@ -1,9 +1,8 @@
 // app/about/page.tsx
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function AboutPage() {
   return (
@@ -15,30 +14,32 @@ export default function AboutPage() {
           A complete authentication system built with Next.js, Supabase, and shadcn/ui.
         </p>
         <div className="prose dark:prose-invert">
-          <p>
+          <p className="mb-4">
             This project is a demonstration of a complete authentication system built with
             Next.js, Supabase, and shadcn/ui. It includes features such as user registration,
             login, password reset, and protected routes.
           </p>
-          <p>
+          <p className="mb-4">
             For detailed documentation, including installation instructions, API references,
             and best practices, please visit our documentation site:
           </p>
+          <div className="flex justify-center my-6">
             <Button>
               <Link href="https://cba-auth.hashnode.space">
                 View Documentation
               </Link>
             </Button>
-          <p>
+          </div>
+          <p className="mb-4">
             Key technologies used include: Next.js (App Router), React, TypeScript,
             Tailwind CSS, shadcn/ui, Zod, Lucide Icons, and Supabase.
           </p>
-          <p>
+          <p className="mb-4">
             Our documentation site provides a comprehensive guide to help you get started with the project. 
             It covers everything from installation to advanced features, ensuring you have all the information 
             you need to effectively use and extend the authentication system.
           </p>
-          <p>
+          <p className="mb-4">
             The documentation page is an essential resource for developers and users of the Auth System. 
             It offers detailed instructions on setting up and configuring the system, as well as in-depth 
             explanations of the various features and functionalities. By providing clear and concise 

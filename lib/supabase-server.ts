@@ -1,7 +1,8 @@
-import { createServerClient } from '@supabase/ssr';
+// lib/supabase-server.ts (CORRECT - Using cookies() helper)
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-export const createSupabaseServerClient = async () => {
+export const createSupabaseServerClient = async () => { // No context parameter!
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -9,16 +10,16 @@ export const createSupabaseServerClient = async () => {
     process.env.SUPABASE_SERVICE_ROLE_KEY!, // Use the SERVICE ROLE KEY
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        async get(name: string) {
+          return (await cookieStore.get(name))?.value;
         },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options })
+        async set(name: string, value: string, options: CookieOptions) {
+          (await cookieStore).set({ name, value, ...options });
         },
-        remove(name: string, options: any) {
-          cookieStore.delete({ name, ...options })
+        async remove(name: string, value: string, options: CookieOptions) {
+          (await cookieStore).delete({ name, value, ...options });
         },
-      }
+      },
     }
   );
 };

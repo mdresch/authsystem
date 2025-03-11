@@ -23,12 +23,34 @@ export default function HomePage() {
       <Header /> {/* Include the Header component */}
       <main className="container mx-auto py-10 flex-1">
         {supabaseKeysExist ? (
-          <>
+          <div className="text-center">
             <h1 className="text-4xl font-bold mb-4">CBA-Auth: Effortless Authentication</h1>
             <p className="text-gray-700 mb-6">Simplify user management and security for modern applications.</p>
-            <Button> <a href="https://cba-auth.hashnode.space/">Documentation</a></Button>{/* Include the Button component with the documentation link */}
-            {/* Add more sections for features, testimonials, and your skills */}
-          </>
+            <div className="flex justify-center mb-6">
+              <Button> <a href="https://cba-auth.hashnode.space/">View Documentation</a></Button>
+            </div>
+            <section className="mt-10">
+              <h2 className="text-2xl font-semibold mb-4">Features</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-xl font-semibold mb-2">Easy integration with Next.js</h3>
+                  <p>Integrate seamlessly with Next.js for a smooth development experience.</p>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-xl font-semibold mb-2">Secure authentication and user management</h3>
+                  <p>Ensure secure authentication and manage users effortlessly.</p>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-xl font-semibold mb-2">Real-time data synchronization</h3>
+                  <p>Keep your data in sync in real-time across all clients.</p>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-xl font-semibold mb-2">Scalable and performant</h3>
+                  <p>Build scalable and high-performance applications with ease.</p>
+                </div>
+              </div>
+            </section>
+          </div>
         ) : (
           <div className="bg-gray-100 p-6 rounded-md">
             <h2 className="text-2xl font-semibold mb-4">Welcome to CBA-Auth!</h2>
@@ -52,7 +74,7 @@ export default function HomePage() {
 
             <h3 className="text-lg font-semibold mt-4 mb-2">Step 5: Add Your Supabase Credentials to .env.local</h3>
             <p className="mb-2">Add the following lines to your <code>.env.local</code> file, replacing the placeholders with your actual values:</p>
-            <pre className="bg-gray-200 p-2 rounded-md">
+            <pre className="bg-gray-200 p-2 rounded-md mb-4">
               <code>
                 NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_URL<br/>
                 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY<br/>
@@ -62,13 +84,13 @@ export default function HomePage() {
 
             <h3 className="text-lg font-semibold mt-4 mb-2">Step 6: Secure Your Credentials</h3>
             <p className="mb-2">Add <code>.env.local</code> to your <code>.gitignore</code> file to prevent your credentials from being committed to your Git repository:</p>
-            <pre className="bg-gray-200 p-2 rounded-md">
+            <pre className="bg-gray-200 p-2 rounded-md mb-4">
               <code>
                 .env.local
               </code>
             </pre>
             <p className="mt-4 font-semibold">Important Security Note:</p>
-            <p>Never commit your <code>.env.local</code> file to your Git repository. This file contains sensitive information that should be kept secret.</p>
+            <p className="mb-4">Never commit your <code>.env.local</code> file to your Git repository. This file contains sensitive information that should be kept secret.</p>
           </div>
         )}
       </main>
