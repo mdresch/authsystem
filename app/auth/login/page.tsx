@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { redirect, useRouter } from "next/navigation"
 import { z } from "zod"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,9 @@ import { Label } from "@/components/ui/label"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Eye, EyeOff } from "lucide-react"
+import { FaGithub } from 'react-icons/fa';
 import { toast } from "@/components/ui/use-toast"
+import { supabaseClient } from "@/lib/supabase-client" // Use client-side Supabase client
 
 // Form validation schema
 const loginSchema = z.object({
@@ -23,13 +25,26 @@ const loginSchema = z.object({
 
 type LoginData = z.infer<typeof loginSchema>
 
+async function signInWithGithub() {
+  const { data, error } = await supabaseClient.auth.signInWithOAuth({
+    provider: "github",
+  })
+
+  if (data.url) {
+    redirect(data.url) // use the redirect API for your server framework
+  } else if (error) {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: error.message || "An error occurred during GitHub sign-in",
+    })
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const { signInWithEmail } = useAuth()
-  const [formData, setFormData] = useState<LoginData>({
-    email: "",
-    password: "",
-  })
+  const [formData, setFormData] = useState<LoginData>({ email: "", password: "" })
   const [errors, setErrors] = useState<Partial<LoginData>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -116,6 +131,7 @@ export default function LoginPage() {
                   disabled={isLoading}
                   required
                   autoComplete="username"
+                  className="truncate"
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
@@ -161,6 +177,10 @@ export default function LoginPage() {
             <CardFooter className="flex flex-col">
               <Button className="w-full" type="submit" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign in"}
+              </Button>
+              <Button className="w-full mt-2 flex items-center justify-center" type="button" onClick={signInWithGithub} disabled={isLoading}>
+                <FaGithub className="mr-2 h-4 w-4" />
+                {isLoading ? "Signing in with GitHub..." : "Sign in with GitHub"}
               </Button>
               <p className="mt-4 text-center text-sm text-muted-foreground">
                 Don&apos;t have an account?{" "}

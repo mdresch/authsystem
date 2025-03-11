@@ -144,7 +144,7 @@ export default function ProfilePage() {
                   </tr>
                   <tr>
                     <td className="border px-4 py-2 font-semibold">Email</td>
-                    <td className="border px-4 py-2">{user?.email || 'N/A'}</td>
+                    <td className="border px-4 py-2 overflow-hidden overflow-ellipsis">{user?.email || 'N/A'}</td>
                   </tr>
                   <tr>
                     <td className="border px-4 py-2 font-semibold">Username</td>

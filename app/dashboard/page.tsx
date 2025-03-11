@@ -47,7 +47,7 @@ export default function DashboardPage() {
                 <User className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{user?.email}</div>
+                <div className="text-2xl font-bold overflow-hidden overflow-ellipsis">{user?.email}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {user?.email}
                 </p>
