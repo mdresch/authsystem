@@ -1,7 +1,7 @@
 // app/login/actions.ts
 'use server'; // Mark this as a server action
 
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/supabase-server";
 import { redirect } from 'next/navigation';
 import { Provider } from '@supabase/supabase-js';
 

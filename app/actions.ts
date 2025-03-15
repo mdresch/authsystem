@@ -1,7 +1,7 @@
 // app/actions.ts (CORRECT - Calling createSupabaseServerClient correctly)
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient } from "@/supabase-server";
 import { headers } from "next/headers";
 // import { redirect } from 'next/navigation'; // Only if you use redirect
 // import { cookies } from "next/headers";     // No need to import here

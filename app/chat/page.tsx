@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { Header } from "@/components/layout/header";
@@ -74,7 +74,7 @@ const modelDetails = {
   presencePenalty: 0,
 }
 
-export default function ChatPage() {
+function ChatPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams();
   const { user } = useAuth()
@@ -208,7 +208,7 @@ export default function ChatPage() {
     .filter((m) => m.role === "user")
     .map((m) => ({
       id: m.id,
-      title: m.content.substring(0, 30) + (m.content.length > 30 ? "..." : ""),
+      title: m.content.substring(0, 30) + (m.content.length > 30 ? "...": ""),
       model: m.model,
       timestamp: m.timestamp,
     }))
@@ -289,5 +289,13 @@ export default function ChatPage() {
         />
       </main>
     </div>
+  )
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin text-primary" />}>
+      <ChatPageContent />
+    </Suspense>
   )
 }
