@@ -16,6 +16,7 @@ import { Eye, EyeOff } from "lucide-react"
 import { FaGithub } from 'react-icons/fa';
 import { toast } from "@/components/ui/use-toast"
 import { supabaseClient } from "@/lib/supabase-client" // Use client-side Supabase client
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 // Form validation schema
 const loginSchema = z.object({
@@ -48,6 +49,7 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<Partial<LoginData>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
 
   useEffect(() => {
     // Parse the URL hash for error details
@@ -80,12 +82,17 @@ export default function LoginPage() {
       // Validate form data
       loginSchema.parse(formData)
 
+      console.log("Form validation passed, attempting login");
+      
       // Attempt login
       await signInWithEmail(formData.email, formData.password)
+      console.log("Login successful, showing success dialog");
 
-      // Redirect to dashboard on success
-      router.push("/dashboard")
+      // Show success dialog
+      setShowSuccessDialog(true)
     } catch (error: any) {
+      console.error("Login error:", error);
+      
       if (error instanceof z.ZodError) {
         // Handle validation errors (simplified)
         const newErrors: Partial<LoginData> = {}
@@ -106,6 +113,11 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleDialogConfirm = () => {
+    setShowSuccessDialog(false)
+    router.push("/dashboard")
   }
 
   return (
@@ -193,6 +205,20 @@ export default function LoginPage() {
         </Card>
       </main>
       <Footer />
+
+      {showSuccessDialog && (
+        <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Login Successful</DialogTitle>
+            </DialogHeader>
+            <p>You have successfully logged in.</p>
+            <DialogFooter>
+              <Button onClick={handleDialogConfirm}>OK</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

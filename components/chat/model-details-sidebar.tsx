@@ -2,6 +2,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { NeumorphicToggleIcon } from "@/components/ui/neumorphic-toggle-icon"
+import { Button } from "@/components/ui/button"
 
 interface ModelDetails {
   name: string
@@ -31,7 +32,7 @@ export function ModelDetailsSidebar({ modelDetails, isExpanded, onToggle }: Mode
         isExpanded ? "w-64 pl-8" : "w-12 pl-0",
       )}
     >
-      <button
+      <Button
         className={cn(
           "absolute left-0 top-4 w-10 h-10 flex items-center justify-center",
           "bg-white dark:bg-gray-800 rounded-r-full",
@@ -44,7 +45,7 @@ export function ModelDetailsSidebar({ modelDetails, isExpanded, onToggle }: Mode
         onClick={onToggle}
       >
         <NeumorphicToggleIcon isExpanded={isExpanded} direction="right" />
-      </button>
+      </Button>
       {isExpanded && (
         <ScrollArea className="h-full p-4 pt-12">
           <h2 className="font-semibold mb-4">Model Details</h2>

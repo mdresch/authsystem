@@ -1,3 +1,5 @@
+// chat-message.tsx
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -10,7 +12,7 @@ interface ChatMessageProps {
     content: string
     role: "user" | "assistant"
     timestamp: Date
-    model?: string
+    model: string
   }
   onCopy: () => void
   index: number
@@ -88,4 +90,3 @@ export function ChatMessage({ message, onCopy, index, total }: ChatMessageProps)
     </div>
   )
 }
-

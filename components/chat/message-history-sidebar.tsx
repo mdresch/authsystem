@@ -35,7 +35,7 @@ export function MessageHistorySidebar({
         isExpanded ? "w-64 pr-8" : "w-12 pr-0",
       )}
     >
-      <button
+      <Button
         className={cn(
           "absolute right-0 top-4 w-10 h-10 flex items-center justify-center",
           "bg-white dark:bg-gray-800 rounded-l-full",
@@ -48,7 +48,7 @@ export function MessageHistorySidebar({
         onClick={onToggle}
       >
         <NeumorphicToggleIcon isExpanded={isExpanded} direction="left" />
-      </button>
+      </Button>
       {isExpanded && (
         <ScrollArea className="h-full p-4 pt-12">
           <h2 className="font-semibold mb-4">Message History</h2>

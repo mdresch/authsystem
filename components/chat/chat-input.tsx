@@ -1,3 +1,4 @@
+// ChatInput.tsx
 "use client"
 
 import type React from "react"
@@ -19,15 +20,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 interface ChatInputProps {
-  onSendMessage: (message: string, model: string, agent: string) => void
+  onSendMessage: (message: string, agent: string) => void //Removed model from function call
 }
-
-const models = [
-  { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo" },
-  { id: "gpt-4", name: "GPT-4" },
-  { id: "claude-v1", name: "Claude v1" },
-  { id: "claude-instant-v1", name: "Claude Instant" },
-]
 
 const agents = [
   { id: "general", name: "General Assistant" },
@@ -40,14 +34,14 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
   const [message, setMessage] = useState("")
   const [isFocused, setIsFocused] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [selectedModel, setSelectedModel] = useState(models[0])
+  //Removed model selection
   const [selectedAgent, setSelectedAgent] = useState(agents[0])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (message.trim()) {
-      onSendMessage(message, selectedModel.id, selectedAgent.id)
+      onSendMessage(message, selectedAgent.id) //Removed model from function call
       setMessage("")
     }
   }
@@ -96,6 +90,7 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
+              {/*   
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <span>Models</span>
@@ -114,6 +109,7 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
                   </DropdownMenuRadioGroup>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+              */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <span>Agents</span>
@@ -133,7 +129,7 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuItem>
-                Current: {selectedModel.name} / {selectedAgent.name}
+                Current: {selectedAgent.name}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -153,4 +149,3 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
     </div>
   )
 }
-

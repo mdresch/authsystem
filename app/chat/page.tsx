@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { Header } from "@/components/layout/header"
+import { Header } from "@/components/layout/header";
 import { ChatInput } from "@/components/chat/chat-input"
 import { ChatMessage } from "@/components/chat/chat-message"
 import { MessageHistorySidebar } from "@/components/chat/message-history-sidebar"
@@ -22,31 +22,53 @@ type Message = {
   agent: string
 }
 
-// Mock AI response function
-const getAIResponse = async (message: string, model: string, agent: string): Promise<string> => {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000))
-
-  const responses = [
-    "I understand what you're saying. Could you tell me more about that?",
-    "That's an interesting perspective. I'd like to explore that further.",
-    "I see your point. Here's what I think about it...",
-    "Thanks for sharing that with me. I'm here to help with any questions.",
-    "I appreciate your input. Let me think about how to respond...",
-    `I've processed your message: "${message.substring(0, 30)}${message.length > 30 ? "..." : ""}". Here's my response...`,
-    "I'm analyzing what you've shared. It's giving me some interesting insights.",
-    "That's a great question. Let me provide some thoughts on this topic.",
-  ]
-
-  return responses[Math.floor(Math.random() * responses.length)]
+// Claude API response type
+type ClaudeResponse = {
+  id: string
+  type: string
+  content: Array<{
+    type: string
+    text: string
+  }>
 }
 
-// Mock model details
+// Function to get response from Claude API
+const getClaudeResponse = async (
+  messages: Array<{ role: string; content: string }>, 
+  model: string
+): Promise<string> => {
+  try {
+    const response = await fetch('/api/claude', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: messages,
+        max_tokens: 4096,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const data: ClaudeResponse = await response.json();
+    return data.content[0].text;
+  } catch (error) {
+    console.error("Error calling Claude API:", error);
+    throw error;
+  }
+}
+
+// Claude model details
 const modelDetails = {
-  name: "GPT-3.5 Turbo",
-  description: "GPT-3.5 Turbo is a powerful language model optimized for dialogue.",
+  name: "Claude 3.7 Sonnet",
+  description: "Claude 3.7 Sonnet is Anthropic's advanced language model optimized for thoughtful dialogue and reasoning.",
   temperature: 0.7,
-  maxTokens: 2048,
+  maxTokens: 4096,
   topP: 1,
   frequencyPenalty: 0,
   presencePenalty: 0,
@@ -54,6 +76,7 @@ const modelDetails = {
 
 export default function ChatPage() {
   const router = useRouter()
+  const searchParams = useSearchParams();
   const { user } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
   const [isTyping, setIsTyping] = useState(false)
@@ -63,6 +86,8 @@ export default function ChatPage() {
   const { toast } = useToast()
   const [leftSidebarExpanded, setLeftSidebarExpanded] = useState(false)
   const [rightSidebarExpanded, setRightSidebarExpanded] = useState(false)
+  const [selectedModel, setSelectedModel] = useState<string>(searchParams.get('model') || "claude-3-sonnet-20240229");
+  const [conversationHistory, setConversationHistory] = useState<Array<{ role: string; content: string }>>([])
 
   // Redirect if not logged in
   useEffect(() => {
@@ -75,7 +100,7 @@ export default function ChatPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsPageLoaded(true)
-    }, 300)
+    }, 3000)
 
     return () => clearTimeout(timer)
   }, [])
@@ -96,13 +121,13 @@ export default function ChatPage() {
   // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom()
-  }, []) // Removed unnecessary dependency: [messages]
+  }, [messages])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  const handleSendMessage = async (content: string, model: string, agent: string) => {
+  const handleSendMessage = async (content: string, model: string = selectedModel, agent: string = "default") => {
     if (!content.trim()) return
 
     // Add user message
@@ -117,17 +142,21 @@ export default function ChatPage() {
 
     setMessages((prev) => [...prev, userMessage])
 
+    // Update conversation history for Claude API
+    const updatedHistory = [...conversationHistory, { role: "user", content }];
+    setConversationHistory(updatedHistory);
+
     // Simulate AI thinking
     setIsTyping(true)
 
     try {
-      // Get AI response (in a real app, you'd use the selected model and agent here)
-      const aiResponse = await getAIResponse(content, model, agent)
+      // Get Claude response
+      const claudeResponse = await getClaudeResponse(updatedHistory, model);
 
       // Add AI message
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: aiResponse,
+        content: claudeResponse,
         role: "assistant",
         timestamp: new Date(),
         model,
@@ -135,12 +164,16 @@ export default function ChatPage() {
       }
 
       setMessages((prev) => [...prev, assistantMessage])
+      
+      // Update conversation history with Claude's response
+      setConversationHistory([...updatedHistory, { role: "assistant", content: claudeResponse }]);
+      
     } catch (error) {
-      console.error("Error getting AI response:", error)
+      console.error("Error getting Claude response:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to get AI response. Please try again.",
+        description: "Failed to get a response from Claude. Please try again.",
       })
     } finally {
       setIsTyping(false)
@@ -209,7 +242,7 @@ export default function ChatPage() {
           >
             {messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                <p>Send a message to start chatting with AI</p>
+                <p>Send a message to start chatting with Claude</p>
               </div>
             ) : (
               messages.map((message, index) => (
@@ -258,4 +291,3 @@ export default function ChatPage() {
     </div>
   )
 }
-

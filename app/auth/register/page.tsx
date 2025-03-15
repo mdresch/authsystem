@@ -148,7 +148,7 @@ export default function RegisterPage() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="me@example.com"
                   value={formData.email}
                   onChange={handleChange}
                   disabled={isLoading}

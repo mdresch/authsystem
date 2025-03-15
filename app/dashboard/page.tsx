@@ -1,140 +1,141 @@
-"use client";
+"use client"
 
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-import { User, Calendar, Settings, Bell } from "lucide-react";
-import { useEffect } from "react"; // Import useEffect
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { UserRound, Settings, FileText, LogOut } from "lucide-react"
+import Link from "next/link"
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const { user, isLoading } = useAuth(); // Corrected variable name: isLoading
+export default function Dashboard() {
+  const { user, isLoading, signOut, getProfile } = useAuth()
+  const [profile, setProfile] = useState<any>(null)
+  const [loadingProfile, setLoadingProfile] = useState(true)
+  const router = useRouter()
 
-  // Use useEffect for redirection, *only* on the client
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/auth/login");
+      router.push("/auth/login")
     }
-  }, [isLoading, user, router]); // Correct dependencies
+  }, [user, isLoading, router])
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        try {
+          setLoadingProfile(true)
+          const profileData = await getProfile(user.id)
+          setProfile(profileData)
+        } catch (error) {
+          console.error("Error fetching profile:", error)
+        } finally {
+          setLoadingProfile(false)
+        }
+      }
+    }
+
+    if (user) {
+      fetchProfile()
+    }
+  }, [user, getProfile])
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push("/auth/login")
+  }
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center p-4">
-          <p>Loading...</p>
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <Skeleton className="h-12 w-1/3 mb-6" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Skeleton className="h-40" />
+              <Skeleton className="h-40" />
+            </div>
+          </div>
         </main>
         <Footer />
       </div>
-    );
+    )
   }
 
-  // If we get here, the user IS logged in, so render the dashboard
+  if (!user) {
+    return null // Router will redirect to login
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 mx-auto">
-        <section className="flex-1 container py-8">
-          <h1 className="text-3xl font-bold mb-6 text-center">Dashboard</h1>
-          {/* ... rest of your dashboard content ... */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Profile</CardTitle>
-                <User className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold overflow-hidden overflow-ellipsis">{user?.email}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {user?.email}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-4"
-                  onClick={() => router.push("/profile")}
-                >
-                  Manage Profile
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Calendar</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Upcoming events
-                </p>
-                <Button variant="outline" size="sm" className="w-full mt-4">
-                  View Calendar
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Notifications
-                </CardTitle>
-                <Bell className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Unread notifications
-                </p>
-                <Button variant="outline" size="sm" className="w-full mt-4">
-                  View All
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Settings</CardTitle>
-                <Settings className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Account</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Manage your account settings
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-4"
-                  onClick={() => router.push("/profile")}
-                >
-                  Settings
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="mt-8">
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Welcome to your dashboard</CardTitle>
+                <CardTitle className="flex items-center">
+                  <UserRound className="mr-2 h-5 w-5" />
+                  Welcome, {profile?.name || user.email?.split('@')[0] || "User"}!
+                </CardTitle>
+                <CardDescription>
+                  {new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <p>
-                  This is a demo dashboard for the authentication system. In a
-                  real application, this would contain your actual application
-                  content.
-                </p>
+                <p>Your account was created on {user.created_at ? new Date(user.created_at).toLocaleDateString() : "recently"}.</p>
+                <p className="mt-2">Email: {user.email}</p>
               </CardContent>
+              <CardFooter>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/profile">View Profile</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Manage your account and settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/profile">
+                    <UserRound className="mr-2 h-4 w-4" /> Profile
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/settings">
+                    <Settings className="mr-2 h-4 w-4" /> Settings
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/documents">
+                    <FileText className="mr-2 h-4 w-4" /> Documents
+                  </Link>
+                </Button>
+              </CardContent>
+              <CardFooter>
+                <Button variant="ghost" className="w-full text-destructive" onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" /> Sign out
+                </Button>
+              </CardFooter>
             </Card>
           </div>
-        </section>
+        </div>
       </main>
       <Footer />
     </div>
-  );
+  )
 }

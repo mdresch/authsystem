@@ -32,19 +32,19 @@ export default function HomePage() {
             <section className="mt-10">
               <h2 className="text-2xl font-semibold mb-4">Features</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="bg-gray p-6 rounded-lg shadow-md">
                   <h3 className="text-xl font-semibold mb-2">Easy integration with Next.js</h3>
                   <p>Integrate seamlessly with Next.js for a smooth development experience.</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="bg-gray p-6 rounded-lg shadow-md">
                   <h3 className="text-xl font-semibold mb-2">Secure authentication and user management</h3>
                   <p>Ensure secure authentication and manage users effortlessly.</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="bg-gray p-6 rounded-lg shadow-md">
                   <h3 className="text-xl font-semibold mb-2">Real-time data synchronization</h3>
                   <p>Keep your data in sync in real-time across all clients.</p>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="bg-gray p-6 rounded-lg shadow-md">
                   <h3 className="text-xl font-semibold mb-2">Scalable and performant</h3>
                   <p>Build scalable and high-performance applications with ease.</p>
                 </div>
